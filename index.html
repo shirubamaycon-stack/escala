@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Escala Noturna — Obra</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0B0F16">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Escala">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap');
+
+:root{
+--void:#0B0F16;
+--panel:#141B26;
+--panel2:#1B2432;
+--line:#263243;
+--lamp:#FFC24B;
+--lamp-soft:rgba(255,194,75,.16);
+--off:#5A6879;
+--ok:#5FD3A6;
+--alert:#FF6B57;
+--text:#E7EDF4;
+--mute:#8A98A9;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+background:var(--void);
+background-image:radial-gradient(120% 60% at 50% -10%, #17202D 0%, #0B0F16 60%);
+color:var(--text);
+font-family:'Inter',system-ui,sans-serif;
+min-height:100vh;
+padding:16px 14px 60px;
+-webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:900px;margin:0 auto}
+
+/* header */
+header{border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:18px}
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--lamp);opacity:.8}
+h1{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:34px;line-height:1.05;letter-spacing:.01em;margin-top:4px}
+h1 input{
+background:transparent;border:none;color:var(--text);font:inherit;width:100%;padding:0;
+border-bottom:1px dashed transparent;
+}
+h1 input:focus{outline:none;border-bottom-color:var(--line)}
+.sub{font-size:12px;color:var(--mute);margin-top:6px}
+
+/* tabs */
+.tabs{display:flex;gap:6px;margin-bottom:16px}
+.tab{
+flex:1;padding:9px;border:1px solid var(--line);background:transparent;color:var(--mute);
+font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:600;letter-spacing:.06em;
+text-transform:uppercase;border-radius:2px;cursor:pointer;
+}
+.tab.on{background:var(--lamp);color:#100C02;border-color:var(--lamp)}
+.tab:focus-visible{outline:2px solid var(--lamp);outline-offset:2px}
+
+/* month nav */
+.mnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.mnav h2{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:600;letter-spacing:.04em}
+.mnav button{
+background:var(--panel);border:1px solid var(--line);color:var(--text);
+width:36px;height:34px;border-radius:2px;cursor:pointer;font-size:15px;
+}
+.mnav button:active{background:var(--panel2)}
+
+/* calendar */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.dow{
+text-align:center;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--mute);
+letter-spacing:.1em;padding:4px 0;
+}
+.dow.sun{color:var(--alert)}
+.dow.sat{color:#6FA8FF}
+.cell{
+aspect-ratio:1/1.05;border:1px solid var(--line);background:var(--panel);border-radius:3px;
+display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;
+position:relative;
+}
+.cell.empty{border:none;background:transparent;cursor:default}
+.cell .dnum{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:600;line-height:1}
+.cell .cnt{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--off)}
+.cell.has .cnt{color:var(--lamp)}
+.cell.full{border-color:var(--lamp);box-shadow:inset 0 0 14px var(--lamp-soft)}
+.cell.low{border-color:#7A4A3E}
+.cell.low .cnt{color:var(--alert)}
+.cell.sel{outline:2px solid var(--lamp);outline-offset:1px}
+.cell:focus-visible{outline:2px solid var(--lamp)}
+
+/* stats */
+.stats{display:flex;gap:10px;margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mute);flex-wrap:wrap}
+.stats b{color:var(--text);font-weight:500}
+
+/* day panel */
+.day{margin-top:22px;border-top:1px solid var(--line);padding-top:16px}
+.dayhead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.daytitle{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;letter-spacing:.02em}
+.daytitle small{font-size:14px;color:var(--mute);font-weight:500;margin-left:6px}
+.gauge{font-family:'JetBrains Mono',monospace;font-size:20px;color:var(--alert)}
+.gauge.ok{color:var(--ok)}
+.gauge.over{color:var(--lamp)}
+.gauge span{font-size:11px;color:var(--mute)}
+.bar{height:3px;background:var(--panel2);margin:10px 0 14px;border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--alert);transition:width .25s}
+.bar i.ok{background:var(--ok)}
+.bar i.over{background:var(--lamp)}
+
+/* lamp grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:6px}
+.lamp{
+display:flex;align-items:center;gap:7px;padding:9px 10px;border-radius:3px;cursor:pointer;
+border:1px solid var(--line);background:var(--panel);color:var(--off);
+font-size:13px;font-weight:500;text-align:left;transition:.14s;
+overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+}
+.lamp .bulb{width:7px;height:7px;border-radius:50%;background:var(--off);flex:none}
+.lamp.on{
+background:var(--lamp-soft);border-color:var(--lamp);color:var(--text);
+box-shadow:0 0 0 1px rgba(255,194,75,.15), 0 0 16px -4px rgba(255,194,75,.5);
+}
+.lamp.on .bulb{background:var(--lamp);box-shadow:0 0 8px var(--lamp)}
+.lamp:focus-visible{outline:2px solid var(--lamp);outline-offset:1px}
+.lamp .nm{overflow:hidden;text-overflow:ellipsis}
+
+/* actions */
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.btn{
+background:var(--panel);border:1px solid var(--line);color:var(--text);padding:8px 12px;
+border-radius:2px;cursor:pointer;font-size:12px;font-weight:500;
+}
+.btn:active{background:var(--panel2)}
+.btn.amber{border-color:var(--lamp);color:var(--lamp)}
+.btn.danger{border-color:#5C3630;color:var(--alert)}
+.btn:focus-visible{outline:2px solid var(--lamp);outline-offset:1px}
+
+/* team tab */
+.addrow{display:flex;gap:6px;margin-bottom:14px}
+.addrow input{
+flex:1;background:var(--panel);border:1px solid var(--line);color:var(--text);
+padding:10px 12px;border-radius:2px;font:inherit;font-size:14px;
+}
+.addrow input:focus{outline:none;border-color:var(--lamp)}
+.plist{display:flex;flex-direction:column;gap:4px}
+.prow{
+display:flex;align-items:center;gap:10px;padding:11px 12px;background:var(--panel);
+border:1px solid var(--line);border-radius:3px;
+}
+.prow .idx{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--off);width:20px;flex:none}
+.prow .nm{flex:1;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prow .days{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--lamp);flex:none}
+.prow .del{background:none;border:none;color:var(--off);cursor:pointer;font-size:16px;padding:0 4px;flex:none}
+.prow .del:hover{color:var(--alert)}
+.hide{display:none}
+.empty-msg{color:var(--mute);font-size:13px;padding:18px 0;text-align:center;border:1px dashed var(--line);border-radius:3px}
+.cfg{display:flex;gap:8px;align-items:center;margin-top:20px;font-size:12px;color:var(--mute);flex-wrap:wrap}
+.cfg input{width:56px;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:6px;border-radius:2px;font:inherit;text-align:center}
+.toast{
+position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(80px);
+background:var(--lamp);color:#100C02;padding:10px 18px;border-radius:2px;font-size:13px;font-weight:600;
+transition:.25s;z-index:9;pointer-events:none;
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<div class="eyebrow">夜間工事 · Escala noturna</div>
+<h1><input id="site" placeholder="Nome da obra"></h1>
+<div class="sub" id="hint">Clique no nome para acender = pessoa escalada naquele dia.</div>
+</header>
+
+<div class="tabs">
+<button class="tab on" id="tabEsc">Escala</button>
+<button class="tab" id="tabEq">Equipe <span id="teamCount"></span></button>
+</div>
+
+<!-- ESCALA -->
+<section id="viewEsc">
+<div class="mnav">
+<button id="prevM">‹</button>
+<h2 id="mLabel"></h2>
+<button id="nextM">›</button>
+</div>
+<div class="cal" id="cal"></div>
+<div class="stats">
+<span>Dias escalados <b id="stDays">0</b></span>
+<span>Total 人工 <b id="stTotal">0</b></span>
+<span>Média/dia <b id="stAvg">0</b></span>
+</div>
+
+<div class="day" id="dayPanel">
+<div class="dayhead">
+<div class="daytitle" id="dTitle"></div>
+<div class="gauge" id="dGauge"></div>
+</div>
+<div class="bar"><i id="dBar"></i></div>
+<div class="grid" id="dGrid"></div>
+<div class="acts">
+<button class="btn" id="copyPrev">Copiar do dia anterior</button>
+<button class="btn" id="clearDay">Limpar dia</button>
+<button class="btn amber" id="copyJP">Copiar lista 日本語</button>
+<button class="btn" id="copyPT">Copiar lista PT</button>
+</div>
+</div>
+</section>
+
+<!-- EQUIPE -->
+<section id="viewEq" class="hide">
+<div class="addrow">
+<input id="newName" placeholder="Nome do funcionário" autocomplete="off">
+<button class="btn amber" id="addP">Adicionar</button>
+</div>
+<div class="plist" id="plist"></div>
+<div class="cfg">
+Meta por dia:
+<input type="number" id="minP" min="1"> a <input type="number" id="maxP" min="1">
+<span>pessoas</span>
+</div>
+<div class="acts">
+<button class="btn" id="exp">Salvar backup (.json)</button>
+<button class="btn" id="imp">Restaurar backup</button>
+<input type="file" id="impFile" accept=".json" class="hide">
+</div>
+<div class="sub" style="margin-top:8px">Os dados ficam no aparelho. Faça um backup de vez em quando.</div>
+</section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const WD_JP=['日','月','火','水','木','金','土'];
+const WD_PT=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const MES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const KEY='escala-obra-chiba';
+
+let S={site:'Supermercado Chiba — Troca de lâmpadas',min:10,max:15,people:[],assign:{}};
+let cur=new Date(), selDay=null, saveT=null;
+
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,'0');
+const key=(y,m,d)=>`${y}-${pad(m+1)}-${pad(d)}`;
+
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600);}
+
+function load(){
+try{
+const r=localStorage.getItem(KEY);
+if(r) S=Object.assign(S,JSON.parse(r));
+}catch(e){/* primeira vez: sem dados salvos */}
+$('site').value=S.site; $('minP').value=S.min; $('maxP').value=S.max;
+selDay=key(cur.getFullYear(),cur.getMonth(),new Date().getMonth()===cur.getMonth()?new Date().getDate():1);
+renderAll();
+}
+function save(){
+clearTimeout(saveT);
+saveT=setTimeout(()=>{
+try{ localStorage.setItem(KEY,JSON.stringify(S)); }
+catch(e){ toast('Não foi possível salvar'); }
+},250);
+}
+
+function list(k){return S.assign[k]||[]}
+function nameOf(id){const p=S.people.find(p=>p.id===id);return p?p.name:''}
+
+function renderAll(){renderCal();renderDay();renderTeam();}
+
+function renderCal(){
+const y=cur.getFullYear(),m=cur.getMonth();
+$('mLabel').textContent=`${MES[m]} ${y}`;
+const first=new Date(y,m,1).getDay(), last=new Date(y,m+1,0).getDate();
+const c=$('cal'); c.innerHTML='';
+WD_PT.forEach((d,i)=>{const e=document.createElement('div');e.className='dow'+(i===0?' sun':i===6?' sat':'');e.textContent=d;c.appendChild(e);});
+for(let i=0;i<first;i++){const e=document.createElement('div');e.className='cell empty';c.appendChild(e);}
+let days=0,total=0;
+for(let d=1;d<=last;d++){
+const k=key(y,m,d), n=list(k).length;
+if(n){days++;total+=n;}
+const b=document.createElement('button');
+b.className='cell'+(n?' has':'')+(n>=S.min?' full':'')+(n>0&&n<S.min?' low':'')+(k===selDay?' sel':'');
+b.innerHTML=`<span class="dnum">${d}</span><span class="cnt">${n?n+'名':'—'}</span>`;
+b.onclick=()=>{selDay=k;renderCal();renderDay();$('dayPanel').scrollIntoView({behavior:'smooth',block:'start'});};
+c.appendChild(b);
+}
+$('stDays').textContent=days;
+$('stTotal').textContent=total;
+$('stAvg').textContent=days?(total/days).toFixed(1):'0';
+}
+
+function renderDay(){
+if(!selDay)return;
+const [y,m,d]=selDay.split('-').map(Number);
+const dt=new Date(y,m-1,d), n=list(selDay).length;
+$('dTitle').innerHTML=`${d} de ${MES[m-1]}<small>${WD_PT[dt.getDay()]} · ${m}月${d}日(${WD_JP[dt.getDay()]})</small>`;
+const g=$('dGauge'), bar=$('dBar');
+const cls=n>=S.max?'over':n>=S.min?'ok':'';
+g.className='gauge '+cls; bar.className=cls;
+g.innerHTML=`${n}<span> / ${S.min}–${S.max}</span>`;
+bar.style.width=Math.min(100,(n/S.max)*100)+'%';
+
+const grid=$('dGrid'); grid.innerHTML='';
+if(!S.people.length){grid.innerHTML='<div class="empty-msg">Cadastre a equipe na aba Equipe.</div>';return;}
+S.people.forEach(p=>{
+const on=list(selDay).includes(p.id);
+const b=document.createElement('button');
+b.className='lamp'+(on?' on':'');
+b.innerHTML=`<span class="bulb"></span><span class="nm">${p.name}</span>`;
+b.onclick=()=>toggle(p.id);
+grid.appendChild(b);
+});
+}
+
+function toggle(id){
+const a=list(selDay).slice();
+const i=a.indexOf(id);
+if(i>=0)a.splice(i,1); else a.push(id);
+if(a.length)S.assign[selDay]=a; else delete S.assign[selDay];
+save();renderCal();renderDay();renderTeam();
+}
+
+function renderTeam(){
+$('teamCount').textContent=S.people.length?`(${S.people.length})`:'';
+const l=$('plist'); l.innerHTML='';
+if(!S.people.length){l.innerHTML='<div class="empty-msg">Nenhum funcionário ainda. Adicione o primeiro acima.</div>';return;}
+const y=cur.getFullYear(),m=cur.getMonth();
+S.people.forEach((p,i)=>{
+let cnt=0;
+Object.keys(S.assign).forEach(k=>{ if(k.startsWith(`${y}-${pad(m+1)}`)&&S.assign[k].includes(p.id))cnt++; });
+const r=document.createElement('div');
+r.className='prow';
+r.innerHTML=`<span class="idx">${pad(i+1)}</span><span class="nm">${p.name}</span><span class="days">${cnt}d</span><button class="del" title="Remover">✕</button>`;
+r.querySelector('.del').onclick=()=>{
+if(!confirm(`Remover ${p.name} da equipe? Ele sai de todos os dias já escalados.`))return;
+S.people=S.people.filter(x=>x.id!==p.id);
+Object.keys(S.assign).forEach(k=>{
+S.assign[k]=S.assign[k].filter(x=>x!==p.id);
+if(!S.assign[k].length)delete S.assign[k];
+});
+save();renderAll();
+};
+l.appendChild(r);
+});
+}
+
+function addPerson(){
+const v=$('newName').value.trim();
+if(!v)return;
+S.people.push({id:'p'+Date.now()+Math.random().toString(36).slice(2,6),name:v});
+$('newName').value='';
+save();renderAll();
+$('newName').focus();
+}
+
+function copyText(t,msg){
+const ta=document.createElement('textarea');
+ta.value=t;ta.style.position='fixed';ta.style.opacity=0;
+document.body.appendChild(ta);ta.select();
+try{document.execCommand('copy');toast(msg);}catch(e){toast('Copie manualmente');}
+document.body.removeChild(ta);
+}
+
+// eventos
+$('addP').onclick=addPerson;
+$('newName').onkeydown=e=>{if(e.key==='Enter')addPerson();};
+$('site').oninput=e=>{S.site=e.target.value;save();};
+$('minP').onchange=e=>{S.min=+e.target.value||1;save();renderAll();};
+$('maxP').onchange=e=>{S.max=+e.target.value||1;save();renderAll();};
+$('prevM').onclick=()=>{cur=new Date(cur.getFullYear(),cur.getMonth()-1,1);renderCal();renderTeam();};
+$('nextM').onclick=()=>{cur=new Date(cur.getFullYear(),cur.getMonth()+1,1);renderCal();renderTeam();};
+$('tabEsc').onclick=()=>{$('tabEsc').classList.add('on');$('tabEq').classList.remove('on');$('viewEsc').classList.remove('hide');$('viewEq').classList.add('hide');};
+$('tabEq').onclick=()=>{$('tabEq').classList.add('on');$('tabEsc').classList.remove('on');$('viewEq').classList.remove('hide');$('viewEsc').classList.add('hide');};
+
+$('clearDay').onclick=()=>{
+if(!list(selDay).length)return;
+if(!confirm('Limpar toda a escala deste dia?'))return;
+delete S.assign[selDay];save();renderAll();
+};
+$('copyPrev').onclick=()=>{
+const [y,m,d]=selDay.split('-').map(Number);
+const p=new Date(y,m-1,d-1);
+const pk=key(p.getFullYear(),p.getMonth(),p.getDate());
+if(!list(pk).length){toast('Dia anterior está vazio');return;}
+S.assign[selDay]=list(pk).slice();
+save();renderAll();toast('Escala copiada');
+};
+$('copyJP').onclick=()=>{
+const a=list(selDay);
+if(!a.length){toast('Nenhuma pessoa neste dia');return;}
+const [y,m,d]=selDay.split('-').map(Number);
+const dt=new Date(y,m-1,d);
+const t=`${S.site}
+${m}月${d}日(${WD_JP[dt.getDay()]}) 夜勤
+出勤者 ${a.length}名
+`+a.map((id,i)=>`${i+1}. ${nameOf(id)}`).join('
+');
+copyText(t,'Lista copiada (JP)');
+};
+$('copyPT').onclick=()=>{
+const a=list(selDay);
+if(!a.length){toast('Nenhuma pessoa neste dia');return;}
+const [y,m,d]=selDay.split('-').map(Number);
+const dt=new Date(y,m-1,d);
+const t=`${S.site}
+${d}/${pad(m)} (${WD_PT[dt.getDay()]}) — noturno
+${a.length} pessoas
+`+a.map((id,i)=>`${i+1}. ${nameOf(id)}`).join('
+');
+copyText(t,'Lista copiada (PT)');
+};
+
+$('exp').onclick=()=>{
+const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+const a=document.createElement('a');
+a.href=URL.createObjectURL(blob);
+a.download=`escala-backup-${key(new Date().getFullYear(),new Date().getMonth(),new Date().getDate())}.json`;
+a.click();URL.revokeObjectURL(a.href);
+toast('Backup salvo');
+};
+$('imp').onclick=()=>$('impFile').click();
+$('impFile').onchange=e=>{
+const f=e.target.files[0]; if(!f)return;
+const r=new FileReader();
+r.onload=()=>{
+try{
+const d=JSON.parse(r.result);
+if(!d.people||!d.assign)throw 0;
+if(!confirm('Restaurar este backup? A escala atual será substituída.'))return;
+S=Object.assign({site:'',min:10,max:15,people:[],assign:{}},d);
+$('site').value=S.site;$('minP').value=S.min;$('maxP').value=S.max;
+save();renderAll();toast('Backup restaurado');
+}catch(err){toast('Arquivo inválido');}
+};
+r.readAsText(f); e.target.value='';
+};
+
+if('serviceWorker' in navigator){
+window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+
+load();
+</script>
+</body>
+</html>
